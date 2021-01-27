@@ -1,17 +1,13 @@
 package com.smartdone.printlog;
 
-import android.app.Application;
 import android.content.Context;
-import android.util.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -20,18 +16,18 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 
 public class Main implements IXposedHookLoadPackage {
-    public static final String MYIPAD_PACKAGE_NAME = "com.ne" + "tspace" + ".my" + "ipad";
+    public static final String PACKAGE_NAME = "com.ne" + "tspace" + ".my" + "ipad";
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
-        if (!loadPackageParam.packageName.contains(MYIPAD_PACKAGE_NAME)) {
+        if (!loadPackageParam.packageName.contains(PACKAGE_NAME)) {
             return;
         }
         XposedHelpers.findAndHookMethod("android.app.Instrumentation", loadPackageParam.classLoader, "newApplication", ClassLoader.class, String.class, Context.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Context context = (Context) param.args[2];
-                Context plicontext = context.createPackageContext(MYIPAD_PACKAGE_NAME, Context.CONTEXT_IGNORE_SECURITY);
+                Context plicontext = context.createPackageContext(PACKAGE_NAME, Context.CONTEXT_IGNORE_SECURITY);
                 InputStream in = plicontext.getAssets().open("libslog.so");
                 File so = new File(context.getFilesDir(), "libslog.so");
                 if (!so.getParentFile().exists()) {
