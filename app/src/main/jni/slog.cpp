@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
+#include <cstring>
+#include <string.h>
 
 static int log_fd = -1;
 static pthread_mutex_t log_init_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -54,7 +56,7 @@ int print_log_native(int buffid, int priority, const char *tag, const char *msg)
     return write_to_kernel(priority, tag, msg);
 }
 
-JNIEXPORT jint JNICALL Java_com_smartdone_printlog_Log_println_1native
+extern "C" JNIEXPORT jint JNICALL Java_com_smartdone_printlog_Log_println_native
         (JNIEnv *env, jclass clazz, jint bufID, jint priority, jstring tag_, jstring msg_) {
     const char *tag = env->GetStringUTFChars(tag_, 0);
     const char *msg = env->GetStringUTFChars(msg_, 0);

@@ -12,7 +12,7 @@ extern "C" {
  * Method:    println_native
  * Signature: (IILjava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_com_smartdone_printlog_Log_println_1native
+JNIEXPORT jint JNICALL Java_com_smartdone_printlog_Log_println_native
   (JNIEnv *, jclass, jint, jint, jstring, jstring);
 
 #ifdef __cplusplus
