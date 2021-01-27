@@ -20,41 +20,44 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 
 public class Main implements IXposedHookLoadPackage {
+    public static final String MYIPAD_PACKAGE_NAME = "com.ne" + "tspace" + ".my" + "ipad";
+
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
-        if (loadPackageParam.packageName.equals("com.smartdone.logtests")) {
-            XposedHelpers.findAndHookMethod("com.shell.SuperApplication", loadPackageParam.classLoader, "attachBaseContext", Context.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    Context context = (Context) param.args[0];
-                    Context plicontext = context.createPackageContext("com.smartdone.printlog", Context.CONTEXT_IGNORE_SECURITY);
-                    InputStream in = plicontext.getAssets().open("libslog.so");
-                    File so = new File(context.getFilesDir(), "libslog.so");
-                    if (!so.getParentFile().exists()) {
-                        so.getParentFile().mkdirs();
-                    }
-                    FileOutputStream fout = new FileOutputStream(so);
-                    byte[] buffer = new byte[1024];
-                    int len = in.read(buffer);
-                    while (len > 0) {
-                        fout.write(buffer);
-                        len = in.read(buffer);
-                    }
-                    fout.flush();
-                    fout.close();
-                    in.close();
-                    android.util.Log.e("LOGTEST", "write so to /data/data/... success");
-                    System.load(so.getAbsolutePath());
-                    Class<?> log = XposedHelpers.findClass("android.util.Log", context.getClassLoader());
-                    MethodReplaceImpl methodReplace = new MethodReplaceImpl();
-                    XposedHelpers.findAndHookMethod(log, "i", String.class, String.class, methodReplace);
-                    XposedHelpers.findAndHookMethod(log, "v", String.class, String.class, methodReplace);
-                    XposedHelpers.findAndHookMethod(log, "e", String.class, String.class, methodReplace);
-                    XposedHelpers.findAndHookMethod(log, "w", String.class, String.class, methodReplace);
-                    XposedHelpers.findAndHookMethod(log, "d", String.class, String.class, methodReplace);
-
-                }
-            });
+        if (!loadPackageParam.packageName.contains(MYIPAD_PACKAGE_NAME)) {
+            return;
         }
+        XposedHelpers.findAndHookMethod("android.app.Instrumentation", loadPackageParam.classLoader, "newApplication", ClassLoader.class, String.class, Context.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Context context = (Context) param.args[2];
+                Context plicontext = context.createPackageContext(MYIPAD_PACKAGE_NAME, Context.CONTEXT_IGNORE_SECURITY);
+                InputStream in = plicontext.getAssets().open("libslog.so");
+                File so = new File(context.getFilesDir(), "libslog.so");
+                if (!so.getParentFile().exists()) {
+                    so.getParentFile().mkdirs();
+                }
+                FileOutputStream fout = new FileOutputStream(so);
+                byte[] buffer = new byte[1024];
+                int len = in.read(buffer);
+                while (len > 0) {
+                    fout.write(buffer);
+                    len = in.read(buffer);
+                }
+                fout.flush();
+                fout.close();
+                in.close();
+                android.util.Log.e("LOGTEST", "write so to /data/data/... success");
+                System.load(so.getAbsolutePath());
+                ClassLoader classLoader = (ClassLoader) param.args[0];
+                Class<?> log = XposedHelpers.findClass("android.util.Log", classLoader);
+                MethodReplaceImpl methodReplace = new MethodReplaceImpl();
+                XposedHelpers.findAndHookMethod(log, "i", String.class, String.class, methodReplace);
+                XposedHelpers.findAndHookMethod(log, "v", String.class, String.class, methodReplace);
+                XposedHelpers.findAndHookMethod(log, "e", String.class, String.class, methodReplace);
+                XposedHelpers.findAndHookMethod(log, "w", String.class, String.class, methodReplace);
+                XposedHelpers.findAndHookMethod(log, "d", String.class, String.class, methodReplace);
+            }
+        });
     }
 }
